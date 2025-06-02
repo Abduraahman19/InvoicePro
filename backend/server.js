@@ -1,7 +1,10 @@
+// server.js
+process.removeAllListeners('warning');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const passport = require('passport');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -11,13 +14,7 @@ dotenv.config();
 // Connect to database
 connectDB();
 
-// Route files
-const authRoutes = require('./routes/authRoutes');
-const clientRoutes = require('./routes/clientRoutes');
-const invoiceRoutes = require('./routes/invoiceRoutes');
-const productRoutes = require('./routes/productRoutes');
-const templateRoutes = require('./routes/templateRoutes');
-
+// Initialize express app
 const app = express();
 
 // Body parser
@@ -29,8 +26,19 @@ app.use(cookieParser());
 // Enable CORS
 app.use(cors());
 
+// Initialize passport
+app.use(passport.initialize());
+require('./config/passport'); // Load passport config
+
+// Route files
+const authRoutes = require('./routes/authRoutes');
+const clientRoutes = require('./routes/clientRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const productRoutes = require('./routes/productRoutes');
+const templateRoutes = require('./routes/templateRoutes');
+
 // Mount routers
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/products', productRoutes);
@@ -48,7 +56,6 @@ const server = app.listen(
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`.red);
-  // Close server & exit process
+  console.log(`Error: ${err.message}`);
   server.close(() => process.exit(1));
 });

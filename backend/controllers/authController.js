@@ -1,15 +1,38 @@
+const passport = require('passport'); // Add this at the top
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRE, OTP_EXPIRE_MINUTES, EMAIL_USER, EMAIL_PASS } = require('../config/config');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-
 // Helper function for error responses
 const errorResponse = (res, statusCode, message) => {
   return res.status(statusCode).json({
     success: false,
     error: message
   });
+};
+
+// @desc    Google OAuth
+// @route   GET /api/auth/google
+// @access  Public
+exports.googleAuth = passport.authenticate('google', {
+  scope: ['profile', 'email'],
+});
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+// @access  Public
+exports.googleAuthCallback = (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      return errorResponse(res, 500, 'Google authentication failed');
+    }
+    if (!user) {
+      return errorResponse(res, 401, 'Google authentication failed');
+    }
+
+    sendTokenResponse(user, 200, res);
+  })(req, res, next);
 };
 
 // @desc    Forgot password

@@ -5,7 +5,29 @@ import { initReactI18next } from 'react-i18next'
 const resources = {
   en: {
     translation: {
+       profile: {
+        title: 'User Profile',
+        fetchError: 'Failed to load profile data',
+        updateError: 'Failed to update profile',
+        updateSuccess: 'Profile updated successfully',
+        saveButton: 'Save Changes',
+        editButton: 'Edit Profile',
+        avatarLabel: 'Profile Picture',
+        avatarHint: 'Max 2MB, JPG/PNG recommended',
+        avatarSizeError: 'Image size should be less than 2MB',
+        nameLabel: 'Full Name',
+        emailLabel: 'Email Address',
+        phoneLabel: 'Phone Number',
+        phonePlaceholder: 'Enter phone number with country code',
+        companyLabel: 'Company Name',
+        companyPlaceholder: 'Your company name',
+        websiteLabel: 'Website',
+        websitePlaceholder: 'https://yourwebsite.com'
+      },
       auth: {
+        loginWithGoogle: "Continue with Google",
+        registerWithGoogle: "Continue with Google",
+        googleLoginFailed: "Google login failed. Please try again.",
         nameTooShort: "Name must be at least 2 characters",
         nameTooLong: "Name must be less than 50 characters",
         passwordTooLong: "Password must be less than 50 characters",
@@ -128,6 +150,25 @@ const resources = {
         close: 'بند کریں',
         load: 'لوڈ کریں',
         delete: 'حذف کریں'
+      },
+       profile: {
+        title: 'صارف پروفائل',
+        fetchError: 'پروفائل ڈیٹا لوڈ کرنے میں ناکامی',
+        updateError: 'پروفائل اپ ڈیٹ کرنے میں ناکامی',
+        updateSuccess: 'پروفائل کامیابی سے اپ ڈیٹ ہو گیا',
+        saveButton: 'تبدیلیاں محفوظ کریں',
+        editButton: 'پروفائل میں ترمیم کریں',
+        avatarLabel: 'پروفائل تصویر',
+        avatarHint: 'زیادہ سے زیادہ 2MB، JPG/PNG تجویز کردہ',
+        avatarSizeError: 'تصویر کا سائز 2MB سے کم ہونا چاہیے',
+        nameLabel: 'پورا نام',
+        emailLabel: 'ای میل ایڈریس',
+        phoneLabel: 'فون نمبر',
+        phonePlaceholder: 'ملک کے کوڈ کے ساتھ فون نمبر درج کریں',
+        companyLabel: 'کمپنی کا نام',
+        companyPlaceholder: 'آپ کی کمپنی کا نام',
+        websiteLabel: 'ویب سائٹ',
+        websitePlaceholder: 'https://yourwebsite.com'
       },
       auth: {
         welcomeBack: 'خوش آمدید!',

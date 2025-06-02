@@ -3,27 +3,27 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
-import ProtectedRoute from './ProtectedRoute';
-import Loader from './Loader';
+import ProtectedRoute from '../components/protectedroutes/ProtectedRoute';
+import Loader from '../components/loader/Loader';
 
 // Lazy-loaded components
-const AuthPage = lazy(() => import('../components/AuthPage'));
+const AuthPage = lazy(() => import('../components/auth/AuthPage'));
 const Dashboard = lazy(() => import('../components/Dashboard'));
-const InvoiceForm = lazy(() => import('../components/InvoiceForm'));
-const InvoicePreview = lazy(() => import('../components/InvoicePreview'));
-const TemplateSelector = lazy(() => import('../components/TemplateSelector'));
-const ClientsPanel = lazy(() => import('../components/ClientsPanel'));
-const ProductsPanel = lazy(() => import('../components/ProductsPanel'));
-const ReportsPanel = lazy(() => import('../components/ReportsPanel'));
-const TaxPanel = lazy(() => import('../components/TaxPanel'));
-const HistoryPanel = lazy(() => import('../components/HistoryPanel'));
-const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
-const UserProfile = lazy(() => import('../components/UserProfile'));
-const HelpCenter = lazy(() => import('../components/HelpCenter'));
-const Notifications = lazy(() => import('../components/Notifications'));
-const ForgotPasswordPage = lazy(() => import('../components/ForgotPasswordPage'));
-const OtpModal = lazy(() => import('../components/OtpModal'));
-const ResetPasswordModal = lazy(() => import('../components/ResetPasswordModal'));
+const InvoiceForm = lazy(() => import('../components/createInvoice/InvoiceForm'));
+const InvoicePreview = lazy(() => import('../components/createInvoice/InvoicePreview'));
+const TemplateSelector = lazy(() => import('../components/panels/TemplateSelector'));
+const ClientsPanel = lazy(() => import('../components/panels/ClientsPanel'));
+const ProductsPanel = lazy(() => import('../components/panels/ProductsPanel'));
+const ReportsPanel = lazy(() => import('../components/panels/ReportsPanel'));
+const TaxPanel = lazy(() => import('../components/panels/TaxPanel'));
+const HistoryPanel = lazy(() => import('../components/panels/HistoryPanel'));
+const SettingsPanel = lazy(() => import('../components/panels/SettingsPanel'));
+const UserProfile = lazy(() => import('../components/panels/UserProfile'));
+const HelpCenter = lazy(() => import('../components/panels/HelpCenter'));
+const Notifications = lazy(() => import('../components/panels/Notifications'));
+const ForgotPasswordPage = lazy(() => import('../components/auth/ForgotPasswordPage'));
+const OtpModal = lazy(() => import('../components/auth/OtpModal'));
+const ResetPasswordModal = lazy(() => import('../components/auth/ResetPasswordModal'));
 
 const AppRoutes = () => {
   return (

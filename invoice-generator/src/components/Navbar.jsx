@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { FiBell, FiHelpCircle, FiSettings, FiUser, FiLogOut } from 'react-icons/fi';
-import LanguageToggle from './LanguageToggle';
+import LanguageToggle from './free/LanguageToggle';
 import { Link, useNavigate } from 'react-router-dom';
-import Notifications from './Notifications';
+import Notifications from './panels/Notifications';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 

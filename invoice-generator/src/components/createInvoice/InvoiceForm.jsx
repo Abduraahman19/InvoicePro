@@ -96,11 +96,11 @@ const InvoiceForm = ({ invoice, setInvoice, saveInvoice }) => {
       items: prev.items.map(item => {
         if (item.id === id) {
           const updatedItem = { ...item, [field]: value }
-          
+
           if (field === 'quantity' || field === 'price') {
             updatedItem.total = updatedItem.quantity * updatedItem.price
           }
-          
+
           return updatedItem
         }
         return item
@@ -142,25 +142,25 @@ const InvoiceForm = ({ invoice, setInvoice, saveInvoice }) => {
       )}
 
       {activeTab === 'company' && (
-        <CompanyInfo 
-          company={safeInvoice.company} 
-          handleChange={handleCompanyChange} 
+        <CompanyInfo
+          company={safeInvoice.company}
+          handleChange={handleCompanyChange}
           handleLogoUpload={handleLogoUpload}
         />
       )}
 
       {activeTab === 'items' && (
-        <ItemTable 
-          items={safeInvoice.items} 
-          addNewItem={addNewItem} 
-          removeItem={removeItem} 
+        <ItemTable
+          items={safeInvoice.items}
+          addNewItem={addNewItem}
+          removeItem={removeItem}
           updateItem={updateItem}
         />
       )}
 
       {activeTab === 'payment' && (
-        <PaymentDetails 
-          paymentDetails={safeInvoice.paymentDetails} 
+        <PaymentDetails
+          paymentDetails={safeInvoice.paymentDetails}
           handleChange={handlePaymentDetailsChange}
         />
       )}

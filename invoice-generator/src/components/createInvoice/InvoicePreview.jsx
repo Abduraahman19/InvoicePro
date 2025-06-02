@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
-import DownloadButton from './DownloadButton'
+import DownloadButton from '../createInvoice/DownloadButton'
 
 const InvoicePreview = ({ invoice, darkMode }) => {
   const { t } = useTranslation()

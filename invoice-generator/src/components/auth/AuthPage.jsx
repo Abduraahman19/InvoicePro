@@ -8,6 +8,8 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { FcGoogle } from 'react-icons/fc';
+import { useGoogleLogin } from '@react-oauth/google'
 
 const AuthPage = () => {
   const { t } = useTranslation();
@@ -72,6 +74,51 @@ const AuthPage = () => {
       setIsAnimating(false);
     }, 500);
   };
+
+
+  // Inside your AuthPage component, add this function:
+  // In AuthPage.jsx
+const handleGoogleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      setIsLoading(true);
+      
+      // Get user info from Google
+      const userInfo = await axios.get(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+      );
+
+      // Send to your backend
+      const response = await axios.post('http://localhost:5000/api/auth/google', {
+        token: tokenResponse.access_token,
+        email: userInfo.data.email,
+        name: userInfo.data.name,
+      });
+
+      const { token, data } = response.data;
+      localStorage.setItem('token', token);
+
+      // Set user preferences
+      setDarkMode(data.darkMode || false);
+      localStorage.setItem('darkMode', data.darkMode || false);
+      document.documentElement.classList.toggle('dark', data.darkMode || false);
+
+      toast.success(t('auth.loginSuccess'));
+      navigate('/');
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast.error(t('auth.googleLoginFailed'));
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  onError: (error) => {
+    console.error('Google login error:', error);
+    toast.error(t('auth.googleLoginFailed'));
+  },
+});
+
 
   const handleLogin = async (values) => {
     try {
@@ -225,11 +272,10 @@ const AuthPage = () => {
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`w-full p-3 pl-10 rounded-lg border ${
-                    formik.touched.name && formik.errors.name 
-                      ? 'border-red-500' 
-                      : 'border-gray-300 dark:border-gray-600'
-                  } dark:bg-gray-700 dark:text-white transition-colors`}
+                  className={`w-full p-3 pl-10 rounded-lg border ${formik.touched.name && formik.errors.name
+                    ? 'border-red-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                    } dark:bg-gray-700 dark:text-white transition-colors`}
                   placeholder={t('auth.namePlaceholder')}
                 />
                 <FiUser className={`absolute left-3 top-3.5 dark:text-gray-400`} />
@@ -251,11 +297,10 @@ const AuthPage = () => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`w-full p-3 pl-10 rounded-lg border ${
-                  formik.touched.email && formik.errors.email 
-                    ? 'border-red-500' 
-                    : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white transition-colors`}
+                className={`w-full p-3 pl-10 rounded-lg border ${formik.touched.email && formik.errors.email
+                  ? 'border-red-500'
+                  : 'border-gray-300 dark:border-gray-600'
+                  } dark:bg-gray-700 dark:text-white transition-colors`}
                 placeholder={t('auth.emailPlaceholder')}
               />
               <FiMail className={`absolute left-3 top-3.5 dark:text-gray-400`} />
@@ -296,11 +341,10 @@ const AuthPage = () => {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`w-full p-3 pl-10 pr-10 rounded-lg border ${
-                  formik.touched.password && formik.errors.password 
-                    ? 'border-red-500' 
-                    : 'border-gray-300 dark:border-gray-600'
-                } dark:bg-gray-700 dark:text-white transition-colors`}
+                className={`w-full p-3 pl-10 pr-10 rounded-lg border ${formik.touched.password && formik.errors.password
+                  ? 'border-red-500'
+                  : 'border-gray-300 dark:border-gray-600'
+                  } dark:bg-gray-700 dark:text-white transition-colors`}
                 placeholder="••••••••"
               />
               <FiLock className={`absolute left-3 top-3.5 dark:text-gray-400`} />
@@ -331,9 +375,8 @@ const AuthPage = () => {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isLoading || !formik.isValid}
-            className={`w-full py-3 px-4 rounded-lg flex items-center justify-center ${
-              !formik.isValid ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-            } text-white font-medium transition-colors disabled:opacity-70`}
+            className={`w-full py-3 px-4 rounded-lg flex items-center justify-center ${!formik.isValid ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              } text-white font-medium transition-colors disabled:opacity-70`}
           >
             {isLoading ? (
               <span className="inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -343,6 +386,18 @@ const AuthPage = () => {
                 <FiArrowRight className="ml-2" />
               </>
             )}
+          </motion.button>
+          <motion.button
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full py-3 px-4 mt-3 rounded-lg flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium transition-colors disabled:opacity-70"
+          >
+            <FcGoogle className="text-xl mr-2" />
+            {isLogin ? t('auth.loginWithGoogle') : t('auth.registerWithGoogle')}
           </motion.button>
         </form>
 

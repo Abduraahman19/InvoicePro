@@ -1,14 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 import {
   FiHome, FiFileText, FiUsers, FiBox,
   FiPieChart, FiDollarSign, FiLayers, FiClock,
   FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
 import Logo from '../assets/invoice.png';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
+  const controls = useAnimation();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const menuItems = [
     { to: "/", icon: <FiHome size={20} />, label: "Dashboard" },
@@ -31,12 +34,37 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     closed: { opacity: 0, x: -20 }
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      const newWidth = window.innerWidth;
+      setWindowWidth(newWidth);
+      
+      // Auto-close when below 800px, auto-open when above 800px
+      if (newWidth < 800) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    // Set initial state based on window width
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle manual toggle - this will override the automatic behavior
+  const handleToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <motion.aside
       initial={sidebarOpen ? "open" : "closed"}
       animate={sidebarOpen ? "open" : "closed"}
       variants={sidebarVariants}
-      className="bg-gray-800 border-r border-gray-700 pt-[2px] flex flex-col h-full relative"
+      className="bg-gray-800 border-r border-gray-700 pt-[1px] flex flex-col h-full relative"
     >
       {/* Logo/Toggle Area */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 h-16">
@@ -54,7 +82,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         )}
 
         <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={handleToggle}
           className="p-1 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 absolute -right-3 top-6 z-10"
         >
           {sidebarOpen ? <FiChevronLeft size={18} /> : <FiChevronRight size={18} />}

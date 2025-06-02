@@ -1,4 +1,4 @@
-import AppRoutes from './components/routes'
+import AppRoutes from '../src/routes/routes'
 import { useTranslation } from 'react-i18next'
 import { I18nextProvider } from 'react-i18next'
 import i18n from './data/i18n'

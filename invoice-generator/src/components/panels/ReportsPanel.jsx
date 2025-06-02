@@ -65,7 +65,7 @@ const ReportsPanel = () => {
       </div>
 
       {/* Report Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col xl:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex space-x-1 bg-gray-900 rounded-lg p-1">
           {['revenue', 'clients', 'products', 'tax', 'all'].map((tab) => (
             <motion.button

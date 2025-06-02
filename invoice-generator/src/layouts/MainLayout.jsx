@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
-import Loader from '../components/Loader'
+import Loader from '../components/loader/Loader'
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)

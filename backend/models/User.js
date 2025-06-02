@@ -36,6 +36,15 @@ const userSchema = new mongoose.Schema({
     website: String,
     taxId: String,
   },
+    googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  isGoogleAuth: {
+    type: Boolean,
+    default: false,
+  },
   darkMode: {
     type: Boolean,
     default: false,
