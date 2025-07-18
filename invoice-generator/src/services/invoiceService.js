@@ -96,29 +96,60 @@ const getInvoiceById = async (invoiceId) => {
   }
 };
 
-// Update existing invoice
+const deleteInvoice = async (invoiceId) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Authentication token not found');
+    }
+
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    const response = await axios.delete(`${API_URL}/${invoiceId}`, config);
+    return response.data;
+    
+  } catch (error) {
+    let errorMessage = 'Failed to delete invoice';
+    
+    if (error.response) {
+      // Handle specific status codes consistently with your other endpoints
+      if (error.response.status === 401) {
+        errorMessage = 'Session expired - please login again';
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else if (error.response.status === 404) {
+        errorMessage = 'Invoice not found';
+      } else if (error.response.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+    } else if (error.request) {
+      errorMessage = 'No response from server';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    throw new Error(errorMessage);
+  }
+};
+// Update the updateInvoice function
 const updateInvoice = async (invoiceId, invoiceData) => {
   try {
     if (!invoiceId) throw new Error('Invoice ID is required');
+    if (!invoiceData) throw new Error('Invoice data is required');
 
     const config = getAuthHeader();
     const response = await axios.put(`${API_URL}/${invoiceId}`, invoiceData, config);
     return response.data;
   } catch (error) {
-    return handleError(error, 'updateInvoice');
-  }
-};
-
-// Delete invoice
-const deleteInvoice = async (invoiceId) => {
-  try {
-    if (!invoiceId) throw new Error('Invoice ID is required');
-
-    const config = getAuthHeader();
-    const response = await axios.delete(`${API_URL}/${invoiceId}`, config);
-    return response.data;
-  } catch (error) {
-    return handleError(error, 'deleteInvoice');
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        'Failed to update invoice';
+    throw new Error(errorMessage);
   }
 };
 

@@ -138,18 +138,11 @@ const InvoiceForm = ({ invoiceToEdit }) => {
     return { subtotal, taxAmount, total };
   };
 
+  // Update the handleSubmit function in InvoiceForm.js
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login again');
-        navigate('/login');
-        return;
-      }
-
       setIsLoading(true);
 
       // Calculate totals
@@ -157,7 +150,7 @@ const InvoiceForm = ({ invoiceToEdit }) => {
       const taxAmount = subtotal * (formData.taxRate / 100);
       const total = subtotal + taxAmount - formData.discount;
 
-      // Prepare the invoice data for API
+      // Prepare the invoice data
       const invoiceData = {
         client: {
           name: formData.client.name,
@@ -167,329 +160,345 @@ const InvoiceForm = ({ invoiceToEdit }) => {
         },
         date: formData.date,
         dueDate: formData.dueDate,
-        items: formData.items.map(item => ({
-          description: item.description,
-          quantity: item.quantity,
-          rate: item.rate
-        })),
+        items: formData.items,
         taxRate: formData.taxRate,
         discount: formData.discount,
-        notes: formData.notes || '',
-        status: formData.status || 'unpaid', // Ensure status is included
+        notes: formData.notes,
+        status: formData.status,
         currency: formData.currency,
         subtotal,
         taxAmount,
         total
       };
 
-      console.log('Sending invoice data:', invoiceData); // Debug log
-
       if (invoiceToEdit) {
         await invoiceService.updateInvoice(invoiceToEdit._id, invoiceData);
+        toast.success('Invoice updated successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } else {
         await invoiceService.createInvoice(invoiceData);
+        toast.success('Invoice created successfully', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
 
       navigate('/invoices');
     } catch (error) {
-      console.error('Full error details:', error);
-      if (error.response) {
-        console.error('Server response:', error.response.data);
-      }
-      toast.error(error.response?.data?.message || 'Failed to save invoice');
+      console.error('Error:', error);
+      toast.error(error.message || 'Failed to save invoice', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }
-  
-    const { subtotal, taxAmount, total } = calculateTotals();
+  };
 
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">
-          {invoiceToEdit ? 'Edit Invoice' : 'Create New Invoice'}
-        </h1>
+  const { subtotal, taxAmount, total } = calculateTotals();
 
-        <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Client
-                <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.client.name}
-                onChange={handleClientChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              >
-                <option value="">Select a client</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.name}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        {invoiceToEdit ? 'Edit Invoice' : 'Create New Invoice'}
+      </h1>
 
-            <div className="grid grid-cols-2 gap-4">
-              <InputField
-                label="Invoice Date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-              />
-
-              <InputField
-                label="Due Date"
-                name="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Client Name"
-                name="name"
-                value={formData.client.name}
-                onChange={handleClientFieldChange}
-                required
-              />
-
-              <InputField
-                label="Client Email"
-                name="email"
-                type="email"
-                value={formData.client.email}
-                onChange={handleClientFieldChange}
-                required
-              />
-
-              <InputField
-                label="Client Phone"
-                name="phone"
-                value={formData.client.phone}
-                onChange={handleClientFieldChange}
-              />
-
-              <InputField
-                label="Client Address"
-                name="address"
-                value={formData.client.address}
-                onChange={handleClientFieldChange}
-              />
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Items</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rate
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {formData.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          name="description"
-                          value={item.description}
-                          onChange={(e) => handleItemChange(index, e)}
-                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          name="quantity"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(index, e)}
-                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          name="rate"
-                          min="0"
-                          step="0.01"
-                          value={item.rate}
-                          onChange={(e) => handleItemChange(index, e)}
-                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          name="amount"
-                          value={item.amount.toFixed(2)}
-                          readOnly
-                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="text-red-600 hover:text-red-900"
-                          disabled={formData.items.length <= 1}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button
-              type="button"
-              onClick={addItem}
-              className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Add Item
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <InputField
-                label="Tax Rate (%)"
-                name="taxRate"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={formData.taxRate}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <InputField
-                label="Discount"
-                name="discount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.discount}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Currency
-              </label>
-              <select
-                name="currency"
-                value={formData.currency}
-                onChange={handleChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="JPY">JPY (¥)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <InputField
-              label="Notes"
-              name="notes"
-              type="textarea"
-              value={formData.notes}
-              onChange={handleChange}
-              placeholder="Any additional notes..."
-            />
-          </div>
-
-          <div className="mb-6">
+      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
             <label className="block text-gray-700 text-sm font-bold mb-2">
-              Status
+              Client
+              <span className="text-red-500">*</span>
             </label>
             <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
+              value={formData.client.name}
+              onChange={handleClientChange}
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             >
-              <option value="unpaid">Unpaid</option>
-              <option value="paid">Paid</option>
+              <option value="">Select a client</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.name}>
+                  {client.name}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <div className="grid grid-cols-2 gap-4 max-w-md ml-auto">
-              <div className="text-gray-600">Subtotal:</div>
-              <div className="text-right">
-                {formData.currency} {subtotal.toFixed(2)}
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              label="Invoice Date"
+              name="date"
+              type="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+            />
 
-              <div className="text-gray-600">Tax ({formData.taxRate}%):</div>
-              <div className="text-right">
-                {formData.currency} {taxAmount.toFixed(2)}
-              </div>
+            <InputField
+              label="Due Date"
+              name="dueDate"
+              type="date"
+              value={formData.dueDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
 
-              <div className="text-gray-600">Discount:</div>
-              <div className="text-right">
-                -{formData.currency} {formData.discount.toFixed(2)}
-              </div>
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Client Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField
+              label="Client Name"
+              name="name"
+              value={formData.client.name}
+              onChange={handleClientFieldChange}
+              required
+            />
 
-              <div className="font-bold text-gray-800 border-t pt-2 mt-2">Total:</div>
-              <div className="font-bold text-gray-800 border-t pt-2 mt-2 text-right">
-                {formData.currency} {total.toFixed(2)}
-              </div>
+            <InputField
+              label="Client Email"
+              name="email"
+              type="email"
+              value={formData.client.email}
+              onChange={handleClientFieldChange}
+              required
+            />
+
+            <InputField
+              label="Client Phone"
+              name="phone"
+              value={formData.client.phone}
+              onChange={handleClientFieldChange}
+            />
+
+            <InputField
+              label="Client Address"
+              name="address"
+              value={formData.client.address}
+              onChange={handleClientFieldChange}
+            />
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Items</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rate
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {formData.items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="text"
+                        name="description"
+                        value={item.description}
+                        onChange={(e) => handleItemChange(index, e)}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        name="quantity"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(index, e)}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        name="rate"
+                        min="0"
+                        step="0.01"
+                        value={item.rate}
+                        onChange={(e) => handleItemChange(index, e)}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        name="amount"
+                        value={item.amount.toFixed(2)}
+                        readOnly
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="text-red-600 hover:text-red-900"
+                        disabled={formData.items.length <= 1}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <button
+            type="button"
+            onClick={addItem}
+            className="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Add Item
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div>
+            <InputField
+              label="Tax Rate (%)"
+              name="taxRate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={formData.taxRate}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <InputField
+              label="Discount"
+              name="discount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.discount}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Currency
+            </label>
+            <select
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="JPY">JPY (¥)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <InputField
+            label="Notes"
+            name="notes"
+            type="textarea"
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Any additional notes..."
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Status
+          </label>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
+            <option value="unpaid">Unpaid</option>
+            <option value="paid">Paid</option>
+          </select>
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <div className="grid grid-cols-2 gap-4 max-w-md ml-auto">
+            <div className="text-gray-600">Subtotal:</div>
+            <div className="text-right">
+              {formData.currency} {subtotal.toFixed(2)}
+            </div>
+
+            <div className="text-gray-600">Tax ({formData.taxRate}%):</div>
+            <div className="text-right">
+              {formData.currency} {taxAmount.toFixed(2)}
+            </div>
+
+            <div className="text-gray-600">Discount:</div>
+            <div className="text-right">
+              -{formData.currency} {formData.discount.toFixed(2)}
+            </div>
+
+            <div className="font-bold text-gray-800 border-t pt-2 mt-2">Total:</div>
+            <div className="font-bold text-gray-800 border-t pt-2 mt-2 text-right">
+              {formData.currency} {total.toFixed(2)}
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => navigate('/invoices')}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
-            >
-              {isLoading ? 'Saving...' : 'Save Invoice'}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  };
-  export default InvoiceForm;
+        <div className="flex justify-end space-x-4">
+          <button
+            type="button"
+            onClick={() => navigate('/invoices')}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
+          >
+            {isLoading ? 'Saving...' : 'Save Invoice'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+export default InvoiceForm;

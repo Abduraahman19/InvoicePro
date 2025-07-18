@@ -1,142 +1,3 @@
-// const Invoice = require('../models/Invoice');
-// const { formatDate, generateInvoiceNumber } = require('../utils/helpers');
-
-// // @desc    Get all invoices
-// // @route   GET /api/invoices
-// // @access  Private
-// exports.getInvoices = async (req, res) => {
-//   try {
-//     const invoices = await Invoice.find({ user: req.user.id })
-//       .sort('-createdAt')
-//       .populate('template', 'name styles');
-
-//     res.json({
-//       success: true,
-//       count: invoices.length,
-//       data: invoices
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       error: 'Server Error'
-//     });
-//   }
-// };
-
-// // @desc    Get single invoice
-// // @route   GET /api/invoices/:id
-// // @access  Private
-// exports.getInvoice = async (req, res) => {
-//   try {
-//     const invoice = await Invoice.findOne({
-//       _id: req.params.id,
-//       user: req.user.id
-//     }).populate('template', 'name styles');
-
-//     if (!invoice) {
-//       return res.status(404).json({
-//         success: false,
-//         error: 'Invoice not found'
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       data: invoice
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       error: 'Server Error'
-//     });
-//   }
-// };
-// exports.createInvoice = async (req, res) => {
-//   try {
-//     if (!req.body.invoiceNumber) {
-//       req.body.invoiceNumber = await generateInvoiceNumber(req.user.id);
-//     }
-
-//     req.body.user = req.user.id;
-
-//     const invoice = await Invoice.create(req.body);
-
-//     res.status(201).json({
-//       success: true,
-//       data: invoice
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       success: false,
-//       error: err.message
-//     });
-//   }
-// };
-// exports.updateInvoice = async (req, res) => {
-//   try {
-//     let invoice = await Invoice.findOne({
-//       _id: req.params.id,
-//       user: req.user.id
-//     });
-
-//     if (!invoice) {
-//       return res.status(404).json({
-//         success: false,
-//         error: 'Invoice not found'
-//       });
-//     }
-
-//     invoice = await Invoice.findByIdAndUpdate(req.params.id, req.body, {
-//       new: true,
-//       runValidators: true
-//     });
-
-//     res.json({
-//       success: true,
-//       data: invoice
-//     });
-//   } catch (err) {
-//     res.status(400).json({
-//       success: false,
-//       error: err.message
-//     });
-//   }
-// };
-// exports.deleteInvoice = async (req, res) => {
-//   try {
-//     const invoice = await Invoice.findOne({
-//       _id: req.params.id,
-//       user: req.user.id
-//     });
-
-//     if (!invoice) {
-//       return res.status(404).json({
-//         success: false,
-//         error: 'Invoice not found'
-//       });
-//     }
-
-//     await invoice.remove();
-
-//     res.json({
-//       success: true,
-//       data: {}
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       error: 'Server Error'
-//     });
-//   }
-// };
-
-
-
-
-
-
-
-
 const asyncHandler = require('express-async-handler');
 const Invoice = require('../models/Invoice');
 const User = require('../models/User');
@@ -219,7 +80,7 @@ const createInvoice = asyncHandler(async (req, res) => {
 const getInvoices = asyncHandler(async (req, res) => {
   try {
     console.log('Fetching invoices for user:', req.user._id); // Debug log
-    
+
     let invoices;
     if (req.user.isAdmin) {
       invoices = await Invoice.find({})
@@ -229,14 +90,14 @@ const getInvoices = asyncHandler(async (req, res) => {
       invoices = await Invoice.find({ user: req.user._id })
         .sort({ createdAt: -1 });
     }
-    
+
     console.log('Found invoices:', invoices.length); // Debug log
     res.json(invoices);
   } catch (error) {
     console.error('Error in getInvoices:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to fetch invoices',
-      error: error.message 
+      error: error.message
     });
   }
 });
@@ -270,84 +131,148 @@ const getInvoiceById = asyncHandler(async (req, res) => {
 // @route   PUT /api/invoices/:id
 // @access  Private
 const updateInvoice = asyncHandler(async (req, res) => {
-  const {
-    client,
-    date,
-    dueDate,
-    items,
-    taxRate,
-    discount,
-    notes,
-    status,
-    currency,
-  } = req.body;
+  try {
+    const {
+      client,
+      date,
+      dueDate,
+      items,
+      taxRate = 0,
+      discount = 0,
+      notes,
+      status = 'unpaid',
+      currency = 'USD'
+    } = req.body;
 
-  const invoice = await Invoice.findById(req.params.id);
+    // Validate required fields
+    if (!client || !date || !dueDate || !items || items.length === 0) {
+      res.status(400);
+      throw new Error('Client, dates, and at least one item are required');
+    }
 
-  if (invoice) {
-    // Check if the user owns the invoice or is admin
-    if (
-      invoice.user.toString() !== req.user._id.toString() &&
-      !req.user.isAdmin
-    ) {
+    // Validate status
+    if (!['paid', 'unpaid'].includes(status)) {
+      res.status(400);
+      throw new Error('Status must be either "paid" or "unpaid"');
+    }
+
+    // Find invoice
+    const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) {
+      res.status(404);
+      throw new Error('Invoice not found');
+    }
+
+    // Authorization check
+    if (invoice.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
       res.status(401);
       throw new Error('Not authorized to update this invoice');
     }
 
-    // Calculate subtotal
-    const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+    // Calculate amounts
+    const subtotal = items.reduce((sum, item) => {
+      const amount = item.quantity * item.rate;
+      return sum + amount;
+    }, 0);
 
-    // Calculate tax
     const taxAmount = subtotal * (taxRate / 100);
-
-    // Calculate total
     const total = subtotal + taxAmount - discount;
 
-    invoice.client = client;
-    invoice.date = date;
-    invoice.dueDate = dueDate;
-    invoice.items = items;
-    invoice.subtotal = subtotal;
-    invoice.taxRate = taxRate;
-    invoice.taxAmount = taxAmount;
-    invoice.discount = discount;
-    invoice.total = total;
-    invoice.notes = notes;
-    invoice.status = status;
-    invoice.currency = currency;
+    // Prepare updated invoice data
+    const updatedData = {
+      client: {
+        name: client.name,
+        email: client.email,
+        phone: client.phone || '',
+        address: client.address || ''
+      },
+      date,
+      dueDate,
+      items: items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.quantity * item.rate
+      })),
+      subtotal,
+      taxRate,
+      taxAmount,
+      discount,
+      total,
+      notes: notes || '',
+      status,
+      currency
+    };
 
-    const updatedInvoice = await invoice.save();
-    res.json(updatedInvoice);
-  } else {
-    res.status(404);
-    throw new Error('Invoice not found');
+    // Update and return the invoice
+    const updatedInvoice = await Invoice.findByIdAndUpdate(
+      req.params.id,
+      updatedData,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedInvoice,
+      message: 'Invoice updated successfully'
+    });
+
+  } catch (error) {
+    console.error(`Error updating invoice ${req.params.id}:`, error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      error: error.message || 'Server error'
+    });
   }
 });
 
-// @desc    Delete invoice
-// @route   DELETE /api/invoices/:id
-// @access  Private
 const deleteInvoice = asyncHandler(async (req, res) => {
-  const invoice = await Invoice.findById(req.params.id);
-
-  if (invoice) {
-    // Check if the user owns the invoice or is admin
-    if (
-      invoice.user.toString() !== req.user._id.toString() &&
-      !req.user.isAdmin
-    ) {
-      res.status(401);
-      throw new Error('Not authorized to delete this invoice');
+  try {
+    // Validate the ID format
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid invoice ID format'
+      });
     }
 
-    await invoice.remove();
-    res.json({ message: 'Invoice removed' });
-  } else {
-    res.status(404);
-    throw new Error('Invoice not found');
+    const invoice = await Invoice.findById(req.params.id);
+    
+    if (!invoice) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Invoice not found'
+      });
+    }
+
+    // Check authorization - consistent with your other endpoints
+    if (invoice.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Not authorized to delete this invoice'
+      });
+    }
+
+    // Perform deletion - using deleteOne for consistency
+    await Invoice.deleteOne({ _id: req.params.id });
+
+    return res.status(200).json({ 
+      success: true,
+      message: 'Invoice deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete Error:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Server error during deletion',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
-
 // @desc    Send invoice via email
 // @route   POST /api/invoices/:id/send
 // @access  Private

@@ -17,7 +17,7 @@ const InvoiceList = () => {
     const fetchInvoices = async () => {
       try {
         setIsLoading(true);
-        
+
         if (!token) {
           toast.error('Please login again');
           navigate('/login');
@@ -59,18 +59,36 @@ const InvoiceList = () => {
     return invoice.status === filter;
   });
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this invoice?')) {
-      try {
-        await invoiceService.deleteInvoice(id, token);
-        setInvoices(prev => prev.filter(invoice => invoice._id !== id));
-        toast.success('Invoice deleted successfully');
-      } catch (error) {
-        console.error('Delete error:', error);
-        toast.error(error.response?.data?.message || 'Failed to delete invoice');
-      }
+const handleDelete = async (id) => {
+  if (window.confirm('Are you sure you want to delete this invoice?')) {
+    try {
+      await invoiceService.deleteInvoice(id);
+      setInvoices(prev => prev.filter(invoice => invoice._id !== id));
+      
+      toast.success('Invoice deleted successfully', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+    } catch (error) {
+      console.error('Delete error:', error);
+      
+      toast.error(error.message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
-  };
+  }
+};
+
 
   if (isLoading) {
     return (
@@ -177,11 +195,10 @@ const InvoiceList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          invoice.status === 'paid'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'paid'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}
                       >
                         {invoice.status || 'unpaid'}
                       </span>
@@ -189,8 +206,9 @@ const InvoiceList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
                         <Link
-                          to={`/invoices/${invoice._id || invoice.id}/edit`}
+                          to={`/invoices/edit/${invoice._id || invoice.id}`}
                           className="text-blue-600 hover:text-blue-900"
+                          state={{ invoice }} // Pass the invoice data to the edit form
                         >
                           <PencilIcon className="h-5 w-5" />
                         </Link>
